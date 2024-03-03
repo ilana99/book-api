@@ -1,0 +1,15 @@
+<form *ngIf="type !== 'addBook'">
+    <label for="input">{{getLabel()}}</label>
+    <input [type]="inputType" type="text" [formControl]="input" required>
+    <button type="button" (click)="submitForm()">Submit</button>
+</form>
+
+<form *ngIf="type === 'addBook'" [formGroup]="bookForm">
+    <label for="author">Author name</label>
+    <input name="author" type="text" formControlName="author" required="">
+    <label for="title">Book Title</label>
+    <input name="title" type="text" formControlName="title" required=""> 
+    <label for="synopsis">Synopsis</label>
+    <input name="synopsis" type="text" formControlName="synopsis" required="">
+    <button type="submit" (click)="submitForm()">Submit</button>
+</form>
