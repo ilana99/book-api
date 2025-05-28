@@ -1,14 +1,15 @@
 package com.example.mysqltest.book;
 
-
 import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,103 +22,124 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+
+import jakarta.validation.Valid;
+
 @CrossOrigin("*")
 @RestController
-@RequestMapping(path="/book")
+@RequestMapping(path = "/book")
 public class BookController {
 	@Autowired
-	
+
 	private BookRepository bookRepository;
-	
-	
-	@PostMapping(path="/add")
-	public ResponseEntity<Book> addNewBook(@RequestBody Book book, @RequestParam String user) {	
+
+	@PostMapping(path = "/add")
+	public ResponseEntity<BookDTO> addNewBook(@Valid @RequestBody BookDTO book) {
 		String title = book.getTitle();
 		String author = book.getAuthor();
 		String synopsis = book.getSynopsis();
-		
+
 		Book n = new Book();
-		n.setUser(user);
 		n.setAuthor(author);
 		n.setTitle(title);
 		n.setSynopsis(synopsis);
-		
-		Book addedBook = bookRepository.save(n);
-		
-	
-		return new ResponseEntity<>(addedBook, HttpStatus.CREATED);
+
+		bookRepository.save(n);
+
+		BookDTO dto = new BookDTO();
+		dto.setAuthor(n.getAuthor());
+		dto.setSynopsis(n.getSynopsis());
+		dto.setTitle(n.getTitle());
+		dto.setId(n.getId());
+
+		return new ResponseEntity<>(dto, HttpStatus.CREATED);
 	}
-	
-	
+
 	@GetMapping(path = "/{id}")
-	public ResponseEntity<?> getBookById(@PathVariable Integer id) {
-	    Optional<Book> bookOptional = bookRepository.findById(id);
+	public ResponseEntity<BookDTO> getBookById(@PathVariable Integer id) {
+		Optional<Book> bookOptional = bookRepository.findById(id);
+		Book book = bookOptional.orElseThrow(() -> new RuntimeException("book not found with id:" + id));
 
-	    if (bookOptional.isPresent()) {
-		    	Iterable<Book> bookIterable = Collections.singleton(bookOptional.get());
-		    	return new ResponseEntity<>(bookIterable, HttpStatus.OK);
-	    } else {
-	    		return new ResponseEntity<>("Book not found for id: " + id, HttpStatus.NOT_FOUND);
-	    }
+		BookDTO dto = new BookDTO();
+		dto.setAuthor(book.getAuthor());
+		dto.setSynopsis(book.getSynopsis());
+		dto.setTitle(book.getTitle());
+		dto.setId(book.getId());
+
+		return new ResponseEntity<>(dto, HttpStatus.OK);
+
 	}
-	
-	
-	
-	@PatchMapping(path="/{id}")
-	public  ResponseEntity<?> modifyBookDetails(@RequestBody Map<String, Object> updates, @PathVariable Integer id) {
-		 Optional<Book> existingBookOptional = bookRepository.findById(id);
-		 
-		 
-		 if (existingBookOptional.isPresent()) {
-			 Book existingBook = existingBookOptional.get();
-			 
-			 try {
-				 for (Map.Entry<String, Object> entry : updates.entrySet()) {
-			            String key = entry.getKey();
-			            Object value = entry.getValue();
-    
-			            Field field = Book.class.getDeclaredField(key);
-		                field.setAccessible(true);
-		                field.set(existingBook, value);
-			        }
-				  bookRepository.save(existingBook);
-				  return new ResponseEntity<>(existingBook, HttpStatus.OK); 
-			 } catch (NoSuchFieldException | IllegalAccessException e){
-				 return new ResponseEntity<>("Error updating book" + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-			 }
-		 } else {
-			 return new ResponseEntity<>("Book not found for id: " + id, HttpStatus.NOT_FOUND);
-		 }
-		 
+
+	@PatchMapping(path = "/{id}")
+	public ResponseEntity<BookDTO> modifyBookDetails(@RequestBody Map<String, Object> updates, @PathVariable Integer id)
+			throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+		Optional<Book> existingBookOptional = bookRepository.findById(id);
+		Book book = existingBookOptional.orElseThrow(() -> new RuntimeException("book not found with id:" + id));
+
+		for (Map.Entry<String, Object> entry : updates.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+
+			Field field = Book.class.getDeclaredField(key);
+			field.setAccessible(true);
+			field.set(book, value);
+		}
+		bookRepository.save(book);
+
+		BookDTO dto = new BookDTO();
+		dto.setAuthor(book.getAuthor());
+		dto.setSynopsis(book.getSynopsis());
+		dto.setTitle(book.getTitle());
+		dto.setId(book.getId());
+
+		return new ResponseEntity<>(dto, HttpStatus.OK);
+
 	}
-	
 
-	// 
-	
-
-	@DeleteMapping(path="/{id}") 
+	@DeleteMapping(path = "/{id}")
 	public ResponseEntity<String> deleteBook(@PathVariable Integer id) {
 		Optional<Book> existingBookOptional = bookRepository.findById(id);
+		Book book = existingBookOptional.orElseThrow(() -> new RuntimeException("book not found with id:" + id));
+
+		bookRepository.delete(book);
+		return new ResponseEntity<>("Book deleted!", HttpStatus.OK);
+
+	}
+
+	@GetMapping(path = "/all")
+	public ResponseEntity<List<BookDTO>> getAllBooks() {
+		List<Book> books = bookRepository.findAll();
+		List<BookDTO> bookListDTO = books.stream()
+		.map(
+			book ->	{
+				BookDTO dto = new BookDTO();
+				dto.setId(book.getId());
+				dto.setTitle(book.getTitle());
+				dto.setAuthor(book.getAuthor());
+				dto.setSynopsis(book.getSynopsis());
+				return dto;
+			})
+		.collect(Collectors.toList());
 		
-		if (existingBookOptional.isPresent()) {
-			Book existingBook = existingBookOptional.get();
-			bookRepository.delete(existingBook);
-			return new ResponseEntity<>("Book deleted!", HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>("Book not found!", HttpStatus.BAD_REQUEST);
-		}
+		return new ResponseEntity<>(bookListDTO, HttpStatus.OK);
+	}
+
+	@GetMapping(path = "/byAuthor")
+	public ResponseEntity<List<BookDTO>> getAllBooksByAuthor(@RequestParam String author) {
+		List<Book> books = bookRepository.findByAuthor(author);
+		List<BookDTO> bookListDTO = books.stream()
+		.map(
+			book ->	{
+				BookDTO dto = new BookDTO();
+				dto.setId(book.getId());
+				dto.setTitle(book.getTitle());
+				dto.setAuthor(book.getAuthor());
+				dto.setSynopsis(book.getSynopsis());
+				return dto;
+			})
+		.collect(Collectors.toList());
 		
+		return new ResponseEntity<>(bookListDTO, HttpStatus.OK);
 	}
-	
-	@GetMapping(path="/all")
-	public  @ResponseBody Iterable<Book> getAllBooks() {
-		return bookRepository.findAll();
-	}
-	
-	@GetMapping(path="/byAuthor")
-	public @ResponseBody Iterable<Book> getAllBooksByAuthor(@RequestParam String author) {
-		return bookRepository.findByAuthor(author);
-	}
-	
-	
+
 }

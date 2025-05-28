@@ -1,6 +1,5 @@
 package com.example.mysqltest.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -13,15 +12,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.example.mysqltest.user.CustomUserDetails;
 import com.example.mysqltest.user.CustomUserDetailsService;
-import com.example.mysqltest.user.User;
 import com.example.mysqltest.user.UserRepository;
 
 @Configuration
@@ -51,12 +47,12 @@ public class WebSecurityConfig {
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf((csrf) -> csrf.disable())
 				.authorizeHttpRequests((authorize) -> authorize
-						.requestMatchers("/auth/registration", "/auth/login", "/auth/getAuthenticated").permitAll()
+						.requestMatchers("/auth/register", "/auth/login").permitAll()
 						.requestMatchers("/auth/logout").authenticated()
-						.anyRequest().authenticated())
-				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+						.anyRequest().permitAll())
 				.authenticationProvider(authenticationProvider())
-				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 		
 		return http.build();
 	}

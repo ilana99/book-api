@@ -76,7 +76,7 @@ public class JWTService {
 	//@formatter:off
 	public String generateToken(String username) {
 		Date now = new Date();
-		Date exp = new Date(System.currentTimeMillis() + (1000 * 10));
+		Date exp = new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24));
 
 		String jwt = Jwts.builder()
 				.id(UUID.randomUUID().toString())

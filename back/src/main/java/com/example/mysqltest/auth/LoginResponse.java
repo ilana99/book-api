@@ -1,4 +1,4 @@
-package com.example.mysqltest.user;
+package com.example.mysqltest.auth;
 
 
 import jakarta.annotation.Nonnull;

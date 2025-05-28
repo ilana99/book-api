@@ -1,4 +1,4 @@
-package com.example.mysqltest.user;
+package com.example.mysqltest.auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.example.mysqltest.config.JWTService;
+import com.example.mysqltest.user.CustomUserDetailsService;
+import com.example.mysqltest.user.User;
+import com.example.mysqltest.user.UserDTO;
+import com.example.mysqltest.user.UserRepository;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,7 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @CrossOrigin("*")
 @RestController
 @RequestMapping(path = "/auth")
-public class UserController {
+public class AuthController {
 
 	@Autowired
 	private final CustomUserDetailsService userService;
@@ -30,7 +35,7 @@ public class UserController {
 	private final JWTService jwtService;
 	
 
-	UserController(UserRepository userRepository, CustomUserDetailsService userService, PasswordEncoder passwordEncoder,
+	AuthController(UserRepository userRepository, CustomUserDetailsService userService, PasswordEncoder passwordEncoder,
 			AuthenticationManager authenticationManager, JWTService jwtService) {
 		this.userRepository = userRepository;
 		this.userService = userService;
@@ -39,7 +44,7 @@ public class UserController {
 		this.jwtService = jwtService;
 	}
 
-	@PostMapping(path = "/registration")
+	@PostMapping(path = "/register")
 	public ResponseEntity<String> registerUser(@RequestBody UserDTO userDTO) {
 		try {
 			User newUser = new User();

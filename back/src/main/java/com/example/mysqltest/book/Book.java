@@ -1,42 +1,26 @@
 package com.example.mysqltest.book;
 
 
-import jakarta.annotation.Nonnull;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 
 
 @Entity
+@Table(name = "book")
 public class Book {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	
 	private Integer id;
 	private String title;
 	private String author;
+	@Column(length = 500)
 	private String synopsis;
-	
-	@Nonnull
-	@Column(name = "username")
-	private String user;
-	
-	
-	public Book() {
-		
-	}
-	
-	public Book(String title, String user, String author, String synopsis) {
-		this.title = title;
-		this.user = user;
-		this.author = author;
-		this.synopsis = synopsis;
-	}
-	
 
-	//
 	
 	public Integer getId() {
 		return id;
@@ -71,15 +55,6 @@ public class Book {
 	}
 	
 	
-	public String getUser() {
-		return user;
-	}
-	
-	public void setUser(String user) {
-		this.user = user;
-	}
-
-
 
 	
 }

@@ -44,20 +44,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			filterChain.doFilter(request, response);
 			return;
 		}
+		logger.info("got token");
 		token = header.substring(7);
+//		logger.info(token);
 		final String username = jwtService.extractUsername(token);
 		final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 		if (jwtService.isTokenValid(token, userDetails)) {
 				logger.info("valid");
 				Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, null);
 				SecurityContextHolder.getContext().setAuthentication(authentication);
-		} 
-		String refreshToken = request.getHeader("Refresh-Token");
-		if (refreshToken != null && jwtService.isTokenValid(refreshToken, userDetails)) {
-			String newToken = jwtService.generateToken(username);
-			Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, null);
-			SecurityContextHolder.getContext().setAuthentication(authentication);
-			response.setHeader("Authorization", "Bearer " + newToken);
+		} else {
+			filterChain.doFilter(request,response);
+			return;
 		}
+//		String refreshToken = request.getHeader("Refresh-Token");
+//		if (refreshToken != null && jwtService.isTokenValid(refreshToken, userDetails)) {
+//			String newToken = jwtService.generateToken(username);
+//			Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, null);
+//			SecurityContextHolder.getContext().setAuthentication(authentication);
+//			response.setHeader("Authorization", "Bearer " + newToken);
+//		}
 		filterChain.doFilter(request,response);
 }}

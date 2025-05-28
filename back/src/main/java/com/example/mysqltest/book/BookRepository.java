@@ -8,4 +8,5 @@ import com.example.mysqltest.book.Book;
 
 public interface BookRepository extends CrudRepository<Book, Integer> {
 	List<Book> findByAuthor(String author);
+	List<Book> findAll();
 }
