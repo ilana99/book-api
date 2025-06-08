@@ -32,8 +32,26 @@ public class BookController {
 	@Autowired
 
 	private BookRepository bookRepository;
+	
+	@GetMapping
+	public ResponseEntity<List<BookDTO>> getAllBooks() {
+		List<Book> books = bookRepository.findAll();
+		List<BookDTO> bookListDTO = books.stream()
+		.map(
+			book ->	{
+				BookDTO dto = new BookDTO();
+				dto.setId(book.getId());
+				dto.setTitle(book.getTitle());
+				dto.setAuthor(book.getAuthor());
+				dto.setSynopsis(book.getSynopsis());
+				return dto;
+			})
+		.collect(Collectors.toList());
+		
+		return new ResponseEntity<>(bookListDTO, HttpStatus.OK);
+	}
 
-	@PostMapping(path = "/add")
+	@PostMapping
 	public ResponseEntity<BookDTO> addNewBook(@Valid @RequestBody BookDTO book) {
 		String title = book.getTitle();
 		String author = book.getAuthor();
@@ -106,23 +124,7 @@ public class BookController {
 
 	}
 
-	@GetMapping(path = "/all")
-	public ResponseEntity<List<BookDTO>> getAllBooks() {
-		List<Book> books = bookRepository.findAll();
-		List<BookDTO> bookListDTO = books.stream()
-		.map(
-			book ->	{
-				BookDTO dto = new BookDTO();
-				dto.setId(book.getId());
-				dto.setTitle(book.getTitle());
-				dto.setAuthor(book.getAuthor());
-				dto.setSynopsis(book.getSynopsis());
-				return dto;
-			})
-		.collect(Collectors.toList());
-		
-		return new ResponseEntity<>(bookListDTO, HttpStatus.OK);
-	}
+	
 
 	@GetMapping(path = "/byAuthor")
 	public ResponseEntity<List<BookDTO>> getAllBooksByAuthor(@RequestParam String author) {
